@@ -1,4 +1,4 @@
-- name: Update Ubuntu
+- name: Update
   hosts: localhost
   become: true
   any_errors_fatal: true
