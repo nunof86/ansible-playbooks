@@ -1,6 +1,6 @@
 # Documentation
 
-## See the full documentation on https://google.com
+## See the full documentation on https://documentation-com.gitbook.io/wazuh-installation/
 
 # Prerequisites
 
