@@ -1,0 +1,325 @@
+- name: Hardening SSH
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Check if ssh_host_* Files Exist
+      stat:
+        path: "/etc/ssh/{{ item }}"
+      register: ssh_host_files
+      loop:
+        - ssh_host_rsa_key
+        - ssh_host_rsa_key.pub
+        - ssh_host_ecdsa_key
+        - ssh_host_ecdsa_key.pub
+        - ssh_host_ed25519_key
+        - ssh_host_ed25519_key.pub
+
+    - name: Delete ssh_host_* files if They Exist
+      file:
+        path: "/etc/ssh/{{ item.item }}"
+        state: absent
+      loop: "{{ ssh_host_files.results }}"
+      when: item.stat.exists
+
+    - name: Generate SSH Host Keys
+      become: yes
+      command:
+        creates: "{{ item.path }}"
+        argv:
+          - "ssh-keygen"
+          - "-t"
+          - "{{ item.type }}"
+          - "-b"
+          - "{{ item.bits }}"
+          - "-f"
+          - "{{ item.path }}"
+          - "-N"
+          - ""
+      loop:
+        - { type: "rsa", bits: "4096", path: "/etc/ssh/ssh_host_rsa_key" }
+        - { type: "ed25519", bits: "256", path: "/etc/ssh/ssh_host_ed25519_key" }
+
+    - name: Restrict Key Exchange, Cipher, and MAC Algorithms
+      become: yes
+      become_method: sudo
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        line: "{{ item }}"
+        create: yes
+      with_items:
+        - "KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,gss-curve25519-sha256-,diffie-hellman-group16-sha512,gss-group16-sha512-,diffie-hellman-group18-sha512,diffie-hellman-group-exchange-sha256"
+        - "Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr"
+        - "MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,umac-128-etm@openssh.com"
+        - "HostKeyAlgorithms ssh-ed25519,ssh-ed25519-cert-v01@openssh.com,sk-ssh-ed25519@openssh.com,sk-ssh-ed25519-cert-v01@openssh.com,rsa-sha2-512,rsa-sha2-512-cert-v01@openssh.com,rsa-sha2-256,rsa-sha2-256-cert-v01@openssh.com"
+      diff: yes
+
+    - name: Uncomment the ssh_host_rsa_key in the sshd_config Configuration File
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '#HostKey /etc/ssh/ssh_host_rsa_key'
+        line: 'HostKey /etc/ssh/ssh_host_rsa_key'
+      diff: yes
+
+    - name: Uncomment the ssh_host_ed25519_key in the sshd_config Configuration File
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '#HostKey /etc/ssh/ssh_host_ed25519_key'
+        line: 'HostKey /etc/ssh/ssh_host_ed25519_key'
+      diff: yes
+
+    - name: Secure SSH Moduli
+      become: true
+      shell: awk '$5 >= 3071' /etc/ssh/moduli > /etc/ssh/moduli.safe
+      args:
+        executable: /bin/bash
+      when: "'/etc/ssh/moduli' is file"
+      diff: yes
+
+    - name: Move moduli.safe to moduli
+      become: true
+      shell: mv /etc/ssh/moduli.safe /etc/ssh/moduli
+      args:
+        executable: /bin/bash
+      when: "'/etc/ssh/moduli.safe' is file"
+      diff: yes
+
+    - name: Secure New Host Key Files
+      ansible.builtin.file:
+        path: /etc/ssh/ssh_host_rsa_key
+        owner: root
+        group: root
+        mode: '0600'
+      diff: yes
+
+    - name: Secure New Host Key Files
+      ansible.builtin.file:
+        path: /etc/ssh/ssh_host_ed25519_key
+        owner: root
+        group: root
+        mode: '0600'
+      diff: yes
+
+    - name: Check if sshd_config Exists
+      stat:
+        path: /etc/ssh/sshd_config
+      register: sshd_config
+
+    - name: Ensure Permissions on /etc/ssh/sshd_config are Configured
+      ansible.builtin.file:
+        path: /etc/ssh/sshd_config
+        owner: root
+        group: root
+        mode: '0600'
+      diff: yes
+
+    - name: Change SSH Port
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'Port'
+        line: 'Port 2222'
+      diff: yes
+
+    - name: Ensure SSH Idle Timeout Interval is Configured
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'ClientAliveCountMax'
+        line: 'ClientAliveCountMax 0'
+      diff: yes
+
+    - name: Ensure SSH AllowTcpForwarding is Disabled
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'AllowTcpForwarding'
+        line: 'AllowTcpForwarding no'
+      diff: yes
+
+    - name: Ensure SSH Compression is Disabled
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'Compression'
+        line: 'Compression no'
+      diff: yes
+
+    - name: Ensure SSH LogLevel is Appropriate
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'LogLevel'
+        line: 'LogLevel verbose'
+      diff: yes
+
+    - name: Ensure SSH MaxAuthTries is Set to 3 or Less
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'MaxAuthTries'
+        line: 'MaxAuthTries 3'
+      diff: yes
+
+    - name: Ensure SSH MaxSessions is Set to 2
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'MaxSessions'
+        line: 'MaxSessions 2'
+      diff: yes
+
+    - name: Ensure SSH TCPKeepAlive is Disabled
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'TCPKeepAlive'
+        line: 'TCPKeepAlive no'
+      diff: yes
+
+    - name: Ensure SSH X11Forwarding is Disabled
+      lineinfile:
+        state: present
+        dest: /etc/ssh/sshd_config
+        regexp: 'X11Forwarding yes'
+        line: 'X11Forwarding no'
+      diff: yes
+
+    - name: Ensure SSH AllowAgentForwarding is Disabled
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'AllowAgentForwarding'
+        line: 'AllowAgentForwarding no'
+      diff: yes
+
+    - name: Ensure SSH PubkeyAuthentication is Enabled
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'PubkeyAuthentication'
+        line: 'PubkeyAuthentication yes'
+      diff: yes
+
+    - name: Ensure SSH AuthorizedKeysFile is Set
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'AuthorizedKeysFile'
+        line: 'AuthorizedKeysFile      .ssh/authorized_keys'
+      diff: yes
+
+    - name: Ensure SSH PasswordAuthentication is Disabled
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+      diff: yes
+
+    - name: Ensure SSH Protocol is Not Set to 1
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: '^Protocol [0-9]+'
+        line: 'Protocol 2'
+      diff: yes
+
+    - name: Ensure SSH IgnoreRhosts is Enabled
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'IgnoreRhosts'
+        line: 'IgnoreRhosts yes'
+      diff: yes
+
+    - name: Ensure SSH HostbasedAuthentication is Disabled
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'HostbasedAuthentication'
+        line: 'HostbasedAuthentication no'
+      diff: yes
+
+    - name: Ensure SSH Root Login is Disabled
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'PermitRootLogin'
+        line: 'PermitRootLogin no'
+      diff: yes
+
+    - name: Ensure SSH PermitEmptyPasswords is Disabled
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'PermitEmptyPasswords'
+        line: 'PermitEmptyPasswords no'
+      diff: yes
+
+    - name: Ensure SSH PermitUserEnvironment is Disabled
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'PermitUserEnvironment'
+        line: 'PermitUserEnvironment no'
+      diff: yes
+
+    - name: Ensure SSH Idle Timeout Interval is Configured
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'ClientAliveInterval'
+        line: 'ClientAliveInterval 300'
+      diff: yes
+
+    - name: Ensure SSH LoginGraceTime is Set to One Minute or Less
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'LoginGraceTime'
+        line: 'LoginGraceTime 60'
+      diff: yes
+
+    - name: Ensure SSH PAM is Enabled
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: 'UsePAM'
+        line: 'UsePAM yes'
+      diff: yes
+
+    - name: Ensure SSH Warning Banner is Configured
+      ansible.builtin.blockinfile:
+        path: /etc/ssh/sshd_config
+        insertafter: 'Banner'
+        block: |
+          Banner /etc/issue
+          Banner /etc/issue.net
+      diff: yes
+
+    - name: Replace Contents of the /etc/issue.net
+      copy:
+        dest: /etc/issue.net
+        content: |
+          #################################################################
+          #                   _    _           _   _                      #
+          #                  / \  | | ___ _ __| |_| |                     #
+          #                 / _ \ | |/ _ \ '__| __| |                     #
+          #                / ___ \| |  __/ |  | |_|_|                     #
+          #               /_/   \_\_|\___|_|   \__(_)                     #
+          #                                                               #
+          #  You are entering into a secured area! Your IP, Login Time,   #
+          #   Username has been noted and has been sent to the server     #
+          #                       administrator!                          #
+          #   This service is restricted to authorized users only. All    #
+          #            activities on this system are logged.              #
+          #  Unauthorized access will be fully investigated and reported  #
+          #        to the appropriate law enforcement agencies.           #
+          #################################################################
+      diff: yes
+
+    - name: Replace Contents of the /etc/issue
+      copy:
+        dest: /etc/issue
+        content: |
+          #################################################################
+          #                   _    _           _   _                      #
+          #                  / \  | | ___ _ __| |_| |                     #
+          #                 / _ \ | |/ _ \ '__| __| |                     #
+          #                / ___ \| |  __/ |  | |_|_|                     #
+          #               /_/   \_\_|\___|_|   \__(_)                     #
+          #                                                               #
+          #  You are entering into a secured area! Your IP, Login Time,   #
+          #   Username has been noted and has been sent to the server     #
+          #                       administrator!                          #
+          #   This service is restricted to authorized users only. All    #
+          #            activities on this system are logged.              #
+          #  Unauthorized access will be fully investigated and reported  #
+          #        to the appropriate law enforcement agencies.           #
+          #################################################################
+      diff: yes
+
+    - name: Restart SSH Service
+      become: true
+      service:
+        name: sshd
+        state: restarted
