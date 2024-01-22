@@ -1,0 +1,37 @@
+#Change the host from localhost to your needs
+#Change the User Teste to the User you need
+
+- name: Create Users and Manage their Home Directories
+  hosts: localhost
+  become: true
+
+  tasks:
+    - name: Create Admin User
+      user:
+        name: admin
+        state: present
+        shell: /bin/bash
+      become: yes
+
+    - name: Create Test User
+      user:
+        name: test
+        state: present
+        shell: /bin/bash
+      become: yes
+
+    - name: Set Permissions on Admin's Home Directory
+      file:
+        path: /home/admin
+        owner: admin
+        group: admin
+        mode: '0750'
+      become: yes
+
+    - name: Set Permissions on Test's Home Directory
+      file:
+        path: /home/test
+        owner: test
+        group: test
+        mode: '0750'
+      become: yes
