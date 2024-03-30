@@ -1,7 +1,4 @@
-#The script bellow is the configuration for the DNS Master machine.
-#Change the content of the file /etc/hostname and /etc/hosts to fit you case, as well the IP address and zones files in the /etc/bind/named.conf.local and /etc/bind/zones/projeto.com.zone. To finish the Master configuration, change the /etc/resolv.conf file to match the IP address of the DNS Master machine(should be the same as the IP of the /etc/hosts and /etc/bind/named.conf.local and the first A record in the /etc/bind/zones/projeto.com.zone. The second A record should match the IP of the Slave machine).
-#Replace the hosts: option to localhost or other host of your choice.
-
+---
 
 - name: DNS Master Configuration
   hosts: dns_master
@@ -25,7 +22,7 @@
       diff: yes
       ignore_errors: yes
 
-    - name: Replace the /etc/hosts Configuration File
+    - name: Replace the /etc/hosts Configuration File #Change the content of the file /etc/hostname and /etc/hosts to fit you case, as well the IP address and zones files in the /etc/bind/named.conf.local and /etc/bind/zones/projeto.com.zone. To finish the Master configuration, change the /etc/resolv.conf file to match the IP address of the DNS Master machine(should be the same as the IP of the /etc/hosts and /etc/bind/named.conf.local and the first A record in the /etc/bind/zones/projeto.com.zone. The second A record should match the IP of the Slave machine).
       become: yes
       copy:
         content: 'your_ip_address ns1.projeto.com ns1'
