@@ -1,7 +1,7 @@
 ---
 
 - name: Install Docker Compose and Docker
-  hosts: all
+  hosts: localhost
   become: true
   any_errors_fatal: true
   max_fail_percentage: 0
