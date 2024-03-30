@@ -29,16 +29,14 @@
         name:
           - apt-transport-https
           - ca-certificates
+          - software-properties-common
           - curl
           - git
-          - software-properties-common
         state: present
       when: ansible_distribution in ['Ubuntu', 'Debian']
 
     - name: Add Docker APT key to trusted.gpg.d
       shell: "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/docker.gpg"
-      args:
-        warn: no
       when: ansible_distribution in ['Ubuntu', 'Debian']
 
     - name: Add Docker APT repository
@@ -59,6 +57,7 @@
         dest: /usr/bin/docker-compose
         mode: '0755'
       when: ansible_distribution in ['Ubuntu', 'Debian']
+
 
     - name: Clone Wazuh Docker Repository
       git:
