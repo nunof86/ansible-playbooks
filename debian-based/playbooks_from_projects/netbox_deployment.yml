@@ -1,6 +1,4 @@
-#Replace the hosts: option to localhost or other host of your choice and the credentials.
-#Replace the admin user and admin password in the Create Superuser if not Exists task.
-
+---
 
 - name: Provision PostgreSQL, Redis, and NetBox with Nginx
   hosts: localhost
@@ -131,7 +129,7 @@
       shell: /opt/netbox/upgrade.sh
       become: yes
 
-    - name: Check if Superuser Exists
+    - name: Check if Superuser Exists # Change the passowrd to your needs
       command: >
         bash -c "source /opt/netbox/venv/bin/activate &&
                 cd /opt/netbox/netbox &&
@@ -144,7 +142,7 @@
       environment:
         DJANGO_SETTINGS_MODULE: "netbox.settings"
 
-    - name: Create Superuser if not Exists
+    - name: Create Superuser if not Exists # Change the passowrd to your needs
       command: >
         bash -c "source /opt/netbox/venv/bin/activate &&
                 cd /opt/netbox/netbox &&
@@ -240,7 +238,7 @@
       replace:
         path: /etc/nginx/sites-enabled/netbox
         regexp: 'server_name .*;'
-        replace: 'server_name 192.168.117.134;'
+        replace: 'server_name your_ip_address;' # Change server_name and your_ip_address to mach your needs
 
     - name: Restart Nginx Service
       become: yes
