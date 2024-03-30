@@ -1,8 +1,7 @@
-#Change the host from localhost to your needs
-#Change the User Teste to the User you need
+---
 
 - name: Create Users and Manage their Home Directories
-  hosts: localhost
+  hosts: localhost #Change the host from localhost to your needs
   become: true
 
   tasks:
@@ -13,7 +12,7 @@
         shell: /bin/bash
       become: yes
 
-    - name: Create Test User
+    - name: Create Test User #Change the User Teste to the User you need
       user:
         name: test
         state: present
