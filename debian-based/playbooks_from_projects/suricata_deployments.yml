@@ -1,4 +1,4 @@
-#Replace the hosts: option to localhost or other host of your choice.
+---
 
 - name: Configure and Install Suricata
   hosts: localhost
