@@ -1,4 +1,4 @@
-#Replace the hosts: option to localhost or other host of your choice.
+---
 
 - name: Fail2ban Installation and Configuration
   hosts: localhost
