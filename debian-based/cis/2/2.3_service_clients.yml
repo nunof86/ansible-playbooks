@@ -1,0 +1,30 @@
+---
+
+- name: CIS Ubuntu Linux 22.04 LTS Benchmark - 2.3 Service Clients
+  hosts: localhost
+  become: true
+  tasks:
+
+    - name: 2.3.1 Ensure NIS client is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y nis"
+
+    - name: 2.3.2 Ensure rsh client is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y rsh-client"
+
+    - name: 2.3.3 Ensure talk client is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y talk"
+
+    - name: 2.3.4 Ensure telnet client is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y telnet"
+
+    - name: 2.3.5 Ensure LDAP client is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y ldap-utils"
+
+    - name: 2.3.6 Ensure RPC is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y rpcbind"
