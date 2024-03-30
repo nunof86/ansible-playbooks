@@ -1,0 +1,80 @@
+---
+
+- name: CIS Ubuntu Linux 22.04 LTS Benchmark - 2.2 Special Purpose Services
+  hosts: localhost
+  become: true
+  tasks:
+
+    - name: 2.2.1 Ensure X Window System is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y xserver-xorg*"
+
+    - name: 2.2.2 Ensure Avahi Server is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y avahi-daemon"
+
+    - name: 2.2.3 Ensure CUPS is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y cups"
+
+    - name: 2.2.4 Ensure DHCP Server is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y isc-dhcp-server"
+
+    - name: 2.2.5 Ensure LDAP server is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y slapd"
+
+    - name: 2.2.6 Ensure NFS is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y nfs-kernel-server"
+
+    - name: 2.2.7 Ensure DNS Server is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y bind9"
+
+    - name: 2.2.8 Ensure FTP Server is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y vsftpd"
+
+    - name: 2.2.9 Ensure HTTP server is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y apache2"
+
+    - name: 2.2.10 Ensure IMAP and POP3 server are not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y dovecot-imapd dovecot-pop3d"
+
+    - name: 2.2.11 Ensure Samba is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y samba"
+
+    - name: 2.2.12 Ensure HTTP Proxy Server is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y squid"
+
+    - name: 2.2.13 Ensure SNMP Server is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y snmp"
+
+    - name: 2.2.14 Ensure NIS Server is not installed
+      ansible.builtin.command:
+        cmd: "apt purge -y nis"
+
+    - name: 2.2.15 Ensure mail transfer agent is configured for local-only mode (Edit the /etc/postfix/main.cf)
+      lineinfile:
+        dest: /etc/postfix/main.cf
+        regexp: 'inet_interfaces = '
+        line: 'inet_interfaces = loopback-only'
+      diff: yes
+      ignore_errors: yes
+
+    - name: 2.2.15 Ensure mail transfer agent is configured for local-only mode (Restart the postfix service)
+      service:
+        name: postfix
+        state: restarted
+      ignore_errors: yes
+
+    - name: 2.2.16 Ensure rsync service is either not installed or masked
+      ansible.builtin.command:
+        cmd: "apt purge -y rsync"
