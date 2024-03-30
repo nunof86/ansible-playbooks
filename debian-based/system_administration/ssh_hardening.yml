@@ -1,3 +1,5 @@
+---
+
 - name: Hardening SSH
   hosts: localhost
   become: true
@@ -321,5 +323,5 @@
     - name: Restart SSH Service
       become: true
       service:
-        name: ssh
+        name: sshd
         state: restarted
