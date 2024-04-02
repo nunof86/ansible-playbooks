@@ -12,7 +12,7 @@
         shell: /bin/bash
       become: yes
 
-    - name: Create Test User #Change the User Teste to the User you need
+    - name: Create Test User #Change the User test to the User you need
       user:
         name: test
         state: present
@@ -27,7 +27,7 @@
         mode: '0750'
       become: yes
 
-    - name: Set Permissions on Test's Home Directory
+    - name: Set Permissions on Test's Home Directory #Change the User test to the User you create earlier
       file:
         path: /home/test
         owner: test
