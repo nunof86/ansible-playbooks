@@ -58,7 +58,6 @@
         mode: '0755'
       when: ansible_distribution in ['Ubuntu', 'Debian']
 
-
     - name: Clone Wazuh Docker Repository
       git:
         repo: https://github.com/wazuh/wazuh-docker.git
