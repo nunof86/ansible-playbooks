@@ -31,7 +31,6 @@
           - ca-certificates
           - software-properties-common
           - curl
-          - git
         state: present
       when: ansible_distribution in ['Ubuntu', 'Debian']
 
