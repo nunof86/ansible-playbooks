@@ -1,8 +1,9 @@
 ---
 
 - name: Update
-  hosts: localhost
+  hosts: all
   become: true
+  gather_facts: true
   any_errors_fatal: true
   max_fail_percentage: 0
 
