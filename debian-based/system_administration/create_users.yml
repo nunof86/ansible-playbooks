@@ -1,7 +1,7 @@
 ---
 
 - name: Create Users and Manage their Home Directories
-  hosts: localhost #Change the host from localhost to your needs
+  hosts: all #Change the host from localhost to your needs
   become: true
 
   tasks:
@@ -34,3 +34,4 @@
         group: test
         mode: '0750'
       become: yes
+
